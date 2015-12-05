@@ -2,7 +2,14 @@
 
 cd `dirname $0`
 tools=`pwd`
-cd ../src/assets/fonts
+
+fontfolder = $1
+if [ $fontfolder == "" ]; then
+  echo "First parameter should be the source font folder!"
+  exit 1
+fi
+
+cd $1
 
 dist="web/"
 echo ">>> Cleanup..."
@@ -35,7 +42,7 @@ for otf in *.otf; do
   subsetted=$dist`echo $otf | sed s:.otf:-subset.otf:g`
   echo "  - Subsetting OTF..."
   pyftsubset $otf --output-file=$subsetted \
-    --unicodes="`cat $tools/encodings/latin-ssoft_unique-glyphs.nam | cut -d\  -f1`" \
+    --unicodes="`cat $tools/../encodings/latin-ssoft_unique-glyphs.nam | cut -d\  -f1`" \
     --layout-features='*' \
     --name-legacy \
     --name-languages='*' \
