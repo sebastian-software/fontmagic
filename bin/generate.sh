@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 
-cd `dirname $0`
-tools=`pwd`
+cwd=`pwd`
 
-fontfolder = $1
-if [ $fontfolder == "" ]; then
+cd `dirname $0`
+bindir=`pwd`
+
+if [ "$1" == "" ]; then
   echo "First parameter should be the source font folder!"
   exit 1
 fi
 
-cd $1
+cd $cwd || exit 1
+cd $1 || exit 1
 
 dist="web/"
 echo ">>> Cleanup..."
-rm -rf $dist > /dev/null 2>&1
-mkdir -p $dist > /dev/null 2>&1
+rm -rf $dist > /dev/null 2>&1 || exit 1
+mkdir -p $dist > /dev/null 2>&1 || exit 1
 
 # Loop trough all original OpenType fonts
 for otf in *.otf; do
@@ -42,11 +44,11 @@ for otf in *.otf; do
   subsetted=$dist`echo $otf | sed s:.otf:-subset.otf:g`
   echo "  - Subsetting OTF..."
   pyftsubset $otf --output-file=$subsetted \
-    --unicodes="`cat $tools/../encodings/latin-ssoft_unique-glyphs.nam | cut -d\  -f1`" \
+    --unicodes="`cat $bindir/../encodings/latin-ssoft_unique-glyphs.nam | cut -d\  -f1`" \
     --layout-features='*' \
     --name-legacy \
     --name-languages='*' \
-    --obfuscate-names
+    --obfuscate-names || exit 1
 
   echo "    - Size: `du -sh $otf | cut -f1` =>`du -sh $subsetted | cut -f1`"
 
@@ -56,7 +58,7 @@ for otf in *.otf; do
 
   ttf=`echo $subsetted | sed s:.otf:.ttf:g`
   echo "  - Convert result to TTF..."
-  fontforge -script $tools/otf-to-ttf.py $subsetted > /dev/null 2>&1 || exit 1
+  fontforge -script $bindir/otf-to-ttf.py $subsetted > /dev/null 2>&1 || exit 1
 
   # Common Options for ttfautohint:
   #
@@ -121,7 +123,7 @@ for otf in *.otf; do
   echo "  - Generating hinted EOT..."
   eotgdi=`echo $hinted | sed s:.ttf:.eot:g`
   # ttf2eot $hinted > $eotgdi
-  python $tools/eotlitetool.py $hinted
+  python $bindir/eotlitetool.py $hinted
 
   # Does MTX compression, but compilation of the tool is currently broken on Mac OS 10.10
   # See also:
